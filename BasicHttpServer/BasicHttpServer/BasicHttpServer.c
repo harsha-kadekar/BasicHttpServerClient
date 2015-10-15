@@ -13,6 +13,12 @@ SOCKET scListenSocket = INVALID_SOCKET;
 
 char* sTestMessage = "GarudNextGen: Recieved your message";
 
+int nThread_Count = 0;
+int nMax_Thread_Count = 512;
+
+CRITICAL_SECTION mcriticalThreadSync;
+CONDITION_VARIABLE mcvThreadCount;
+
 /*
 Name: main
 Description: this is the main entry point of the application. It will just call other functions to do the activity
@@ -141,11 +147,30 @@ int ListenForClientConnection()
 		return nReturnValue;
 	}
 
+	InitializeCriticalSection(&mcriticalThreadSync);
+	InitializeConditionVariable(&mcvThreadCount);
+
 	while ((scClientSocket = accept(scListenSocket, NULL, NULL)) != INVALID_SOCKET)
 	{
 		printf_s("BHS:INFO:Client connection established: \n");
 		printf_s("BHS:INFO:Creating a thread to handle the connection\n");
-		hClientThread = CreateThread(NULL, 0, HandleClientRequestThread, scClientSocket, 0, &dwClientThreadId);
+		
+		hClientThread = CreateThread(NULL, 0, HandleClientRequestThread, scClientSocket, 0x00000004, &dwClientThreadId);
+
+		EnterCriticalSection(&mcriticalThreadSync);
+
+
+		if (nThread_Count >= nMax_Thread_Count)
+		{
+			SleepConditionVariableCS(&mcvThreadCount, &mcriticalThreadSync, INFINITE);
+			
+		}
+
+		nThread_Count++;
+		ResumeThread(hClientThread);
+
+		LeaveCriticalSection(&mcriticalThreadSync);
+
 		printf_s("BHS:INFO:Returning to wait for new connections......\n");
 	}
 
@@ -164,6 +189,8 @@ int ListenForClientConnection()
 	scListenSocket = INVALID_SOCKET;
 	WSACleanup();
 
+	DeleteCriticalSection(&mcriticalThreadSync);
+	
 	return nReturnValue;
 }
 
@@ -178,6 +205,8 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 	int nReturnValue = 0;
 	SOCKET scClientSocket = (SOCKET)lpParam;
 	char szRecieveMsg[512] = { '\0' };
+	char* szErrorMessage = "HTTP/1.0 404 Not Found";
+	boolean bFoundSecondSpace = 0;
 
 	if (scClientSocket == INVALID_SOCKET)
 	{
@@ -191,6 +220,24 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 	{
 		printf_s("BHS:INFO:Recieved %d bytes\n", nReturnValue);
 		printf_s("BHS:INFO: %s\n", szRecieveMsg);
+
+		//Handle based on HTTP
+		if (strnlen_s(szRecieveMsg, 512) >= 3)
+		{
+			if (szRecieveMsg[0] == 'G' && szRecieveMsg[1] == 'E' && szRecieveMsg[2] == 'T')
+			{
+				for (int i = 4; i < strnlen_s(szRecieveMsg, 512); i++)
+				{
+					if (szRecieveMsg[i] == ' ')
+					{
+						bFoundSecondSpace = 1;
+						break;
+					}
+				}
+				//Find the requested html file
+				//strcpy_s()
+			}
+		}
 
 		nReturnValue = send(scClientSocket, sTestMessage, 35, 0);
 		if (nReturnValue == SOCKET_ERROR)
@@ -230,7 +277,12 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 
 	closesocket(scClientSocket);
 	scClientSocket = INVALID_SOCKET;
-	WSACleanup();
+	//WSACleanup();
+
+	EnterCriticalSection(&mcriticalThreadSync);
+	nThread_Count--;
+	WakeConditionVariable(&mcvThreadCount);
+	LeaveCriticalSection(&mcriticalThreadSync);
 
 	return nReturnValue;
 
