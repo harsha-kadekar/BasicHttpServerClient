@@ -18,12 +18,24 @@
     <ClCompile Include="BasicHttpServer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HandleHTTPRequest.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpRequestParsing.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicHttpServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ErrorCodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpRequestParsing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HandleHTTPRequest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

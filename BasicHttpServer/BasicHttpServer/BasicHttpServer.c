@@ -203,8 +203,13 @@ ReturnValue: 0 for success else error.
 DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 {
 	int nReturnValue = 0;
+	int nRequestSize = 0;
+	int nPrevSize = 0;
+	int i = 0;
 	SOCKET scClientSocket = (SOCKET)lpParam;
-	char szRecieveMsg[512] = { '\0' };
+	char szRecieveMsg[8192] = { '\0' };
+	char *temp = NULL;
+	char *szFullRequestMsg = 0;
 	char* szErrorMessage = "HTTP/1.0 404 Not Found";
 	boolean bFoundSecondSpace = 0;
 
@@ -214,45 +219,61 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 		return nReturnValue;
 	}
 
-	nReturnValue = recv(scClientSocket, szRecieveMsg, 512, 0);
-
-	if (nReturnValue > 0)
+	while((nReturnValue = recv(scClientSocket, szRecieveMsg, 8192, 0)) > 0)
 	{
+		nPrevSize = nRequestSize;
+		temp = szFullRequestMsg;
 		printf_s("BHS:INFO:Recieved %d bytes\n", nReturnValue);
 		printf_s("BHS:INFO: %s\n", szRecieveMsg);
 
-		//Handle based on HTTP
-		if (strnlen_s(szRecieveMsg, 512) >= 3)
+		nRequestSize = nReturnValue + nPrevSize;
+		szFullRequestMsg = (char*)malloc(sizeof(char)*nRequestSize);
+		if (szFullRequestMsg == 0)
 		{
-			if (szRecieveMsg[0] == 'G' && szRecieveMsg[1] == 'E' && szRecieveMsg[2] == 'T')
+			//ERROR have to handle it
+		}
+		else
+		{
+			memset(szFullRequestMsg, '\0', nRequestSize);
+			if (nPrevSize > 0)
 			{
-				for (int i = 4; i < strnlen_s(szRecieveMsg, 512); i++)
-				{
-					if (szRecieveMsg[i] == ' ')
-					{
-						bFoundSecondSpace = 1;
-						break;
-					}
-				}
-				//Find the requested html file
-				//strcpy_s()
+				strcpy_s(szFullRequestMsg, nPrevSize-1, temp);
+
+				free(temp);
+				temp = 0;
 			}
+
+			//strcpy_s(&szFullRequestMsg[nPrevSize], nReturnValue, szRecieveMsg);
+			i = 0;
+			while (i < nReturnValue-1)
+			{
+				szFullRequestMsg[i + nPrevSize] = szRecieveMsg[i];
+				i++;
+			}
+
 		}
 
-		nReturnValue = send(scClientSocket, sTestMessage, 35, 0);
-		if (nReturnValue == SOCKET_ERROR)
-		{
-			printf_s("BHS:ERROR:send to client failed %d\n", WSAGetLastError());
-			nReturnValue = ERR_SENDTOCLIENTFAILED;
-			closesocket(scClientSocket);
-			scClientSocket = INVALID_SOCKET;
-			WSACleanup();
-			return nReturnValue;
-		}
+		
+
+		
 	}
-	else if (nReturnValue == 0)
+
+	if (nReturnValue == 0)
 	{
 		printf_s("BHS:INFO:Client has closed socket\n");
+		printf_s("BHS:INFO:Going to handle client request\n");
+
+		nReturnValue = HandleClientHTTPRequest(szFullRequestMsg, nRequestSize, scClientSocket);
+		if (nReturnValue != 0)
+		{
+			//ERROR HANDLE it
+		}
+
+		if (szFullRequestMsg != 0)
+		{
+			free(szFullRequestMsg);
+			szFullRequestMsg = 0;
+		}
 	}
 	else
 	{

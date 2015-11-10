@@ -147,10 +147,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BasicHttpServer.c" />
+    <ClCompile Include="HandleHTTPRequest.c" />
+    <ClCompile Include="HttpRequestParsing.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicHttpServer.h" />
     <ClInclude Include="ErrorCodes.h" />
+    <ClInclude Include="HandleHTTPRequest.h" />
+    <ClInclude Include="HttpRequestParsing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

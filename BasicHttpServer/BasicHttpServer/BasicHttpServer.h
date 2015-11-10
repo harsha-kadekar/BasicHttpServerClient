@@ -6,6 +6,7 @@
 #include<Windows.h>
 #include<ws2tcpip.h>
 #include"ErrorCodes.h"
+#include"HandleHTTPRequest.h"
 
 int InitializeSocket();
 int ListenForClientConnection();
