@@ -12,4 +12,8 @@ int InitializeSocket();
 int ListenForClientConnection();
 DWORD WINAPI HandleClientRequestThread(LPVOID lpParam);
 
+extern int nMaxClientRequestSize;
+extern int nThreadPoolSize;
+extern char *strConfigFilePath;
+
 #endif

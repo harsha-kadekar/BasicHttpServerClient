@@ -5,6 +5,10 @@ Developer - Harsha
 
 #include"ConfigFileParser.h"
 
+char strConfigFilePath[260] = "BasicHttpServerConfig.config";
+int nMaxClientRequestSize = 8192;
+int nThreadPoolSize = 512;
+
 /*
 Name: ConfigFileParserInitialization
 Description: This function will do the initialization of the parameters. Also does necessary tasks to start reading configuration file.
@@ -84,14 +88,14 @@ int ReadConigurationFile()
 					szKey[j++] = szFileBuffer[i++];
 				}
 
-				if (strcmp(szKey, "HostedWebSites"))
+				if (strcmp(szKey, "HostedWebSites") == 0)
 				{
 					nReturnValue = HandleHostedWebSites(szFileBuffer, nNumberOfCharRead, &i);
 					if (nReturnValue != 0)
 						return nReturnValue;
 				}
 
-				if (strcmp(szKey, "ServerConfiguration"))
+				if (strcmp(szKey, "ServerConfiguration") == 0)
 				{
 					nReturnValue = HandleServerConfiguration(szFileBuffer, nNumberOfCharRead, &i);
 					if (nReturnValue != 0)
@@ -141,7 +145,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 	<MaximumSizeOfRequest>8192</MaximumSizeOfRequest>
 	*/
 
-	for (int i = *(nCurrentIndex); i < nSize; i++)
+	for (i = *(nCurrentIndex); i < nSize; i++)
 	{
 		if (szFileBuffer[i] != '<')
 			continue;
@@ -149,13 +153,14 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 		{
 			if (szFileBuffer[i + 1] != '/')
 			{
+				i++;
 				memset(szKey, '\0', 1024);
 				j = 0;
 				while (szFileBuffer[i] != '>')
 				{
 					szKey[j++] = szFileBuffer[i++];
 				}
-				if (strcmp(szKey, "ThreadPoolSize"))
+				if (strcmp(szKey, "ThreadPoolSize") == 0)
 				{
 					i++;
 					j = 0;
@@ -172,7 +177,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 
 
 				}
-				else if (strcmp(szKey, "MaximumSizeOfRequest"))
+				else if (strcmp(szKey, "MaximumSizeOfRequest") == 0)
 				{
 					i++;
 					j = 0;
@@ -197,6 +202,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 			}
 			else
 			{
+				i++;
 				memset(szKey, '\0', 1024);
 				j = 0;
 				while (szFileBuffer[i] != '>')
@@ -204,7 +210,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 					szKey[j++] = szFileBuffer[i++];
 				}
 
-				if (strcmp(szKey, "/ServerConfiguration"))
+				if (strcmp(szKey, "/ServerConfiguration") == 0)
 				{
 					break;
 				}
@@ -233,7 +239,7 @@ int ConvertStringToNumber(char* strNum, int* pResNum)
 
 	while (strNum[i] != '\0' && i < 1024)
 	{
-		nTemp = strNum[i] - '0';
+		nTemp = strNum[i++] - '0';
 		if (nTemp > 9)
 		{
 			//INVALID NUMBER CHARACTER
@@ -261,6 +267,251 @@ nReturnValue: 0 for success else -ve value
 int HandleHostedWebSites(char* szFileBuffer, int nSize, int *nCurrentIndex)
 {
 	int nReturnValue = 0;
+	int i = 0;
+	int j = 0;
+	int nTempNum = 0;
+	char szKey[1024] = { '\0' };
+
+	/*<WebSite>
+		<LocalMappedPath>"C:\D_Drive\Coding\BasicHttpServerClient\BasicHttpServer\Webpages"< / LocalMappedPath>
+		<WebSiteName>www.justfun.com< / WebSiteName>
+		<AliasWebSiteName>< / AliasWebSiteName>
+		<IPAddress>10.8.20.9< / IPAddress>
+	< / WebSite>*/
+
+	for (i = (*nCurrentIndex); i < nSize; i++)
+	{
+		if (szFileBuffer[i] != '<')
+			continue;
+		else
+		{
+			i++;
+			if (szFileBuffer[i] != '/')
+			{
+				j = 0;
+				memset(szKey, '\0', 1024);
+				while (szFileBuffer[i] != '>')
+				{
+					szKey[j++] = szFileBuffer[i++];
+				}
+
+				if (strcmp(szKey, "WebSite") == 0)
+				{
+					WebSiteDetails *webSite = (WebSiteDetails*)malloc(sizeof(WebSiteDetails) * 1);
+
+					nReturnValue = GetWebSiteDetails(szFileBuffer, nSize, &i, webSite);
+					if (nReturnValue != 0)
+					{
+						free(webSite);
+						webSite = 0;
+						return nReturnValue;
+					}
+
+					WebSites *webSiteNode = (WebSites*)malloc(sizeof(WebSites) * 1);
+					(*webSiteNode).webDetails = webSite;
+					(*webSiteNode).pNext = 0;
+
+					if (pHeadOfWebSiteList != 0)
+					{
+						(*webSiteNode).pNext = pHeadOfWebSiteList;
+						pHeadOfWebSiteList = webSiteNode;
+					}
+					else
+					{
+						pHeadOfWebSiteList = webSiteNode;
+					}
+				}
+
+
+			}
+			else
+			{
+				i++;
+				j = 0;
+				memset(szKey, '\0', 1024);
+				while (szFileBuffer[i] != '>')
+				{
+					szKey[j++] = szFileBuffer[i++];
+				}
+
+				if (strcmp(szKey, "HostedWebSites") == 0)
+					break;
+			}
+		}
+		
+	}
+
+	(*nCurrentIndex) = i;
+
+	return nReturnValue;
+}
+
+/*
+Name: GetWebSiteDetails
+Description: This will read specific website details from the configuration file.
+parameters: szFileBuffer - configuraition file in memory
+			nSize - Size of the file
+			nCurrentIndex - Point where the website details is going to start
+			webSite - structure where read information needs to be stored.
+returnValue: 0 for success else -ve value.
+*/
+int GetWebSiteDetails(char* szFileBuffer, int nSize, int *nCurrentIndex, WebSiteDetails *webSite)
+{
+	int nReturnValue = 0;
+	int i = 0;
+	int j = 0;
+	char szKey[1024] = { '\0' };
+
+	/*
+	<LocalMappedPath>"C:\D_Drive\Coding\BasicHttpServerClient\BasicHttpServer\Webpages"< / LocalMappedPath>
+	<WebSiteName>www.justfun.com< / WebSiteName>
+	<AliasWebSiteName>< / AliasWebSiteName>
+	<IPAddress>10.8.20.9< / IPAddress>
+	*/
+
+	for (i = (*nCurrentIndex); i < nSize; i++)
+	{
+		if (szFileBuffer[i] != '<')
+			continue;
+		else
+		{
+			if (szFileBuffer[i + 1] != '/')
+			{
+				i++;
+				j = 0;
+				memset(szKey, '\0', 1024);
+				while (szFileBuffer[i] != '>')
+					szKey[j++] = szFileBuffer[i++];
+
+				if (strcmp(szKey, "LocalMappedPath") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+					(*webSite).strLocalPath = (char*)malloc(sizeof(char)*strnlen_s(szKey, 1024)+1);
+					memset((*webSite).strLocalPath, '\0', strnlen_s(szKey, 1024) + 1);
+					j = 0;
+					while (j < strnlen_s(szKey, 1024))
+					{
+						(*webSite).strLocalPath[j] = szKey[j];
+						j++;
+					}
+
+					//strcpy_s((*webSite).strLocalPath, strnlen_s(szKey, 1024), szKey);
+
+					
+				}
+				else if (strcmp(szKey, "WebSiteName") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+					(*webSite).strWebSiteName = (char*)malloc(sizeof(char)*strnlen_s(szKey, 1024)+1);
+					memset((*webSite).strWebSiteName, '\0', strnlen_s(szKey, 1024) + 1);
+					j = 0;
+					while (j < strnlen_s(szKey, 1024))
+					{
+						(*webSite).strWebSiteName[j] = szKey[j];
+						j++;
+					}
+				}
+				else if (strcmp(szKey, "AliasWebSiteName") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+					(*webSite).strAliasNames = (char*)malloc(sizeof(char)*strnlen_s(szKey, 1024)+1);
+					memset((*webSite).strAliasNames, '\0', strnlen_s(szKey, 1024) + 1);
+					j = 0;
+					while (j < strnlen_s(szKey, 1024))
+					{
+						(*webSite).strAliasNames[j] = szKey[j];
+						j++;
+					}
+				}
+				else if (strcmp(szKey, "IPAddress") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+					(*webSite).strIPAddress = (char*)malloc(sizeof(char)*strnlen_s(szKey, 1024)+1);
+					memset((*webSite).strIPAddress, '\0', strnlen_s(szKey, 1024) + 1);
+					j = 0;
+					while (j < strnlen_s(szKey, 1024))
+					{
+						(*webSite).strIPAddress[j] = szKey[j];
+						j++;
+					}
+				}
+
+			}
+			else
+			{
+				i++;
+				j = 0;
+				memset(szKey, '\0', 1024);
+				while (szFileBuffer[i] != '>')
+				{
+					szKey[j++] = szFileBuffer[i++];
+				}
+
+				if (strcmp(szKey, "/WebSite") == 0)
+					break;
+			}
+		}
+	}
+
+	(*nCurrentIndex) = i;
+
+	return nReturnValue;
+}
+
+/*
+Name: UninitializeConfigurationParameters
+Description: This function will uninitialize the parameters which are set during configuration file reading. It involves deallocating 
+			 memory as well.
+Parameters: -
+ReturnValue: 0 for success else -ve value indicating error codes.
+*/
+int UninitializeConfigurationParameters()
+{
+	int nReturnValue = 0;
+	WebSites *pCurrent = 0, *pTemp = 0;
+
+	if (pHeadOfWebSiteList != 0)
+	{
+		pCurrent = pHeadOfWebSiteList;
+		while (pCurrent != 0)
+		{
+			free((*(*pCurrent).webDetails).strAliasNames);
+			(*(*pCurrent).webDetails).strAliasNames = 0;
+			free((*(*pCurrent).webDetails).strIPAddress);
+			(*(*pCurrent).webDetails).strIPAddress = 0;
+			free((*(*pCurrent).webDetails).strLocalPath);
+			(*(*pCurrent).webDetails).strLocalPath = 0;
+			free((*(*pCurrent).webDetails).strWebSiteName);
+			(*(*pCurrent).webDetails).strWebSiteName = 0;
+
+			free((*pCurrent).webDetails);
+			(*pCurrent).webDetails = 0;
+
+			pTemp = pCurrent;
+			pCurrent = (*pCurrent).pNext;
+
+			free(pTemp);
+			pTemp = 0;
+		}
+
+		pHeadOfWebSiteList = 0;
+	}
 
 	return nReturnValue;
 }

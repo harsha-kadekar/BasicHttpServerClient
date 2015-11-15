@@ -5,9 +5,6 @@
 #include<Windows.h>
 #include"ErrorCodes.h"
 
-int nMaxClientRequestSize = 8192;
-int nThreadPoolSize = 512;
-
 typedef struct
 {
 	char* strWebSiteName;
@@ -24,10 +21,12 @@ typedef struct structWebSites
 
 WebSites* pHeadOfWebSiteList;
 
-char strConfigFilePath[260] = "BasicHttpServerConfig.config";
-
-int HandleServerConfiguration(char* szFileBuffer, int nSize, int nCurrentIndex);
+int ConfigFileParserInitialization();
+int ReadConigurationFile();
+int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex);
 int HandleHostedWebSites(char* szFileBuffer, int nSize, int *nCurrentIndex);
 int ConvertStringToNumber(char* strNum, int* pResNum);
+int GetWebSiteDetails(char* szFileBuffer, int nSize, int *nCurrentIndex, WebSiteDetails *webSite);
+int UninitializeConfigurationParameters();
 
 #endif

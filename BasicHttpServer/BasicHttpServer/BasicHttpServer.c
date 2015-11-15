@@ -6,6 +6,7 @@ References:
 */
 
 #include "BasicHttpServer.h"
+#include "ConfigFileParser.h"
 
 #pragma comment(lib,"ws2_32.lib") 
 
@@ -14,7 +15,8 @@ SOCKET scListenSocket = INVALID_SOCKET;
 char* sTestMessage = "GarudNextGen: Recieved your message";
 
 int nThread_Count = 0;
-int nMax_Thread_Count = 512;
+//int nMax_Thread_Count = 512;
+
 
 CRITICAL_SECTION mcriticalThreadSync;
 CONDITION_VARIABLE mcvThreadCount;
@@ -31,6 +33,19 @@ int main(int argc, char** argv)
 	int nReturnValue = 0;
 
 	printf("\nBHS:INFO:Started BASIC HTTP SERVER.....\n");
+	printf_s("\nBHS:INFO:Started reading server configuraiton file\n");
+	nReturnValue = ConfigFileParserInitialization();
+	if (nReturnValue != 0)
+	{
+		printf_s("\nBHS:ERROR:Initialization of configuraition file reading failed with error:%d\n", nReturnValue);
+		return nReturnValue;
+	}
+	nReturnValue = ReadConigurationFile();
+	if (nReturnValue != 0)
+	{
+		printf_s("\nBHS:ERROR:Error in reading configuraiton file = %d\n", nReturnValue);
+		return nReturnValue;
+	}
 	printf("\nBHS:INFO:Initializing Socket......\n");
 	nReturnValue = InitializeSocket();
 	if (nReturnValue != 0)
@@ -46,6 +61,13 @@ int main(int argc, char** argv)
 		{
 			printf_s("BHS:ERROR:ERROR has occurred during listening to client connection\n");
 		}
+	}
+
+	printf_s("\nBHS:INFO:Uninitializing the parameters configured after reading configuration files\n");
+	nReturnValue = UninitializeConfigurationParameters();
+	if (nReturnValue != 0)
+	{
+		printf_s("\nBHS:ERROR:error during uninitializing the parameters: %d\n", nReturnValue);
 	}
 	printf("\nBHS:INFO:Exiting BASIC HTTP SERVER.......\n");
 
@@ -160,7 +182,7 @@ int ListenForClientConnection()
 		EnterCriticalSection(&mcriticalThreadSync);
 
 
-		if (nThread_Count >= nMax_Thread_Count)
+		if (nThread_Count >= nThreadPoolSize)
 		{
 			SleepConditionVariableCS(&mcvThreadCount, &mcriticalThreadSync, INFINITE);
 			
@@ -207,7 +229,8 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 	int nPrevSize = 0;
 	int i = 0;
 	SOCKET scClientSocket = (SOCKET)lpParam;
-	char szRecieveMsg[8192] = { '\0' };
+	//char szRecieveMsg[8192] = { '\0' };
+	char *szRecieveMsg = 0;
 	char *temp = NULL;
 	char *szFullRequestMsg = 0;
 	char* szErrorMessage = "HTTP/1.0 404 Not Found";
@@ -219,7 +242,9 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 		return nReturnValue;
 	}
 
-	while((nReturnValue = recv(scClientSocket, szRecieveMsg, 8192, 0)) > 0)
+	szRecieveMsg = (char*)malloc(sizeof(char)*nMaxClientRequestSize);
+
+	while((nReturnValue = recv(scClientSocket, szRecieveMsg, nMaxClientRequestSize, 0)) > 0)
 	{
 		nPrevSize = nRequestSize;
 		temp = szFullRequestMsg;
@@ -279,6 +304,11 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 	{
 		printf_s("BHS:ERROR:Could not recieve message from client %d\n", WSAGetLastError());
 		nReturnValue = ERR_RECIEVEFROMCLIENTFAILED;
+		if (szRecieveMsg != 0)
+		{
+			free(szRecieveMsg);
+			szRecieveMsg = 0;
+		}
 		closesocket(scClientSocket);
 		scClientSocket = INVALID_SOCKET;
 		WSACleanup();
@@ -290,6 +320,11 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 	{
 		printf_s("BHS:ERROR:Could not shutdown client connection properly %d\n", WSAGetLastError());
 		nReturnValue = ERR_SHUTDOWNSOCKETERROR;
+		if (szRecieveMsg != 0)
+		{
+			free(szRecieveMsg);
+			szRecieveMsg = 0;
+		}
 		closesocket(scClientSocket);
 		scClientSocket = INVALID_SOCKET;
 		WSACleanup();
@@ -304,6 +339,12 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 	nThread_Count--;
 	WakeConditionVariable(&mcvThreadCount);
 	LeaveCriticalSection(&mcriticalThreadSync);
+
+	if (szRecieveMsg != 0)
+	{
+		free(szRecieveMsg);
+		szRecieveMsg = 0;
+	}
 
 	return nReturnValue;
 
