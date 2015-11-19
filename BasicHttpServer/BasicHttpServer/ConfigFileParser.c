@@ -8,6 +8,8 @@ Developer - Harsha
 char strConfigFilePath[260] = "BasicHttpServerConfig.config";
 int nMaxClientRequestSize = 8192;
 int nThreadPoolSize = 512;
+int nLogLevel = 1;
+char *strMappedLocalPath = 0;
 
 /*
 Name: ConfigFileParserInitialization
@@ -191,6 +193,42 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 						return ERR_INVALID_VALUE_IN_CONFIG;
 					}
 					nMaxClientRequestSize = nTempNum;
+
+				}
+				else if (strcmp(szKey, "LocalMappedPath") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+					strMappedLocalPath = (char*)malloc(sizeof(char)*strnlen_s(szKey, 1024) + 1);
+					memset(strMappedLocalPath, '\0', strnlen_s(szKey, 1024) + 1);
+					j = 0;
+					while (szKey[j] != '\0' && j < 1024)
+					{
+						strMappedLocalPath[j] = szKey[j];
+					}
+
+				}
+				else if (strcmp(szKey, "LogLevel") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+
+					if (strcmp(szKey, "ALL") == 0)
+						nLogLevel = 1;
+					else if (strcmp(szKey, "DEBUG") == 0)
+						nLogLevel = 2;
+					else if (strcmp(szKey, "INFO") == 0)
+						nLogLevel = 3;
+					else if (strcmp(szKey, "WARN") == 0)
+						nLogLevel = 4;
+					else
+						nLogLevel = 5;	//ERROR
 
 				}
 				else
@@ -511,6 +549,12 @@ int UninitializeConfigurationParameters()
 		}
 
 		pHeadOfWebSiteList = 0;
+	}
+
+	if (strMappedLocalPath != 0)
+	{
+		free(strMappedLocalPath);
+		strMappedLocalPath = 0;
 	}
 
 	return nReturnValue;

@@ -27,6 +27,9 @@
     <ClCompile Include="ConfigFileParser.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SupportingDataStructures.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicHttpServer.h">
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ConfigFileParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SupportingDataStructures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
