@@ -208,6 +208,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 					while (szKey[j] != '\0' && j < 1024)
 					{
 						strMappedLocalPath[j] = szKey[j];
+						j++;
 					}
 
 				}

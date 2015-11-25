@@ -30,25 +30,32 @@ ReturnValue: Created dictionary.
 Dictionary* CreateDictionary(int nSizeOfDictory)
 {
 	Dictionary *dict = 0;
+	Dictionary test;
+
+	test.LoadFactor = 0.8;
+	test.nCurrentSize = 0;
+	test.nSizeOfDictionary = 10;
+	test.dictionaryArray = 0;
+
 	int i = 0;
 
 	if (nSizeOfDictory == 0)
 		nSizeOfDictory = 10;
 
-	dict = (Dictionary*)malloc(sizeof(Dictionary) * 1);
+	dict = (Dictionary*)malloc(sizeof(Dictionary));
 	if (dict == 0)
 	{
 		//Error handle it
 		return dict;
 	}
 
-	(*dict).LoadFactor = 0.8;
-	(*dict).nSizeOfDictionary = nSizeOfDictory;
-	(*dict).nCurrentSize = 0;
-	(*dict).dictionaryArray = (DictionaryNode**)malloc(sizeof(DictionaryNode*)*(*dict).nSizeOfDictionary);
+	dict->LoadFactor = 0.8;
+	dict->nSizeOfDictionary = nSizeOfDictory;
+	dict->nCurrentSize = 0;
+	dict->dictionaryArray = (DictionaryNode**)malloc(sizeof(DictionaryNode*)*dict->nSizeOfDictionary);
 
-	for (int i = 0; i < (*dict).nSizeOfDictionary; i++)
-		(*dict).dictionaryArray[i] = 0;
+	for (int i = 0; i < dict->nSizeOfDictionary; i++)
+		dict->dictionaryArray[i] = 0;
 
 
 	return dict;
@@ -116,15 +123,15 @@ int DeleteDictionary(Dictionary *dict)
 
 	if (dict != 0)
 	{
-		if ((*dict).dictionaryArray != 0)
+		if (dict->dictionaryArray != 0)
 		{
-			nReturnValue = DeleteDictionaryNodeArray((*dict).dictionaryArray, (*dict).nSizeOfDictionary);
-			(*dict).dictionaryArray = 0;
+			nReturnValue = DeleteDictionaryNodeArray(dict->dictionaryArray, dict->nSizeOfDictionary);
+			dict->dictionaryArray = 0;
 		}
 
-		(*dict).LoadFactor = 0;
-		(*dict).nCurrentSize = 0;
-		(*dict).nSizeOfDictionary = 0;
+		dict->LoadFactor = 0;
+		dict->nCurrentSize = 0;
+		dict->nSizeOfDictionary = 0;
 
 		free(dict);
 		dict = 0;
@@ -148,7 +155,10 @@ DictionaryNode* CreateADictionaryNode(char* strKey, char *strValue)
 
 	(*node).next = 0;
 
-	(*node).strName = (char*)malloc(sizeof(char)*strnlen_s(strKey, MAXKEYSIZE) + 1);
+	node->strName = strKey;
+	node->strValue = strValue;
+
+	/*(*node).strName = (char*)malloc(sizeof(char)*strnlen_s(strKey, MAXKEYSIZE) + 1);
 	memset((*node).strName, '\0', strnlen_s(strKey, MAXKEYSIZE) + 1);
 	while (strKey[i] != '\0')
 	{
@@ -163,7 +173,7 @@ DictionaryNode* CreateADictionaryNode(char* strKey, char *strValue)
 	{
 		(*node).strValue[i] = strValue[i];
 		i++;
-	}
+	}*/
 
 	return node;
 }
@@ -192,12 +202,12 @@ int AddNameValueToDictionary(Dictionary *dict, char *strKey, char *strValue)
 
 	if (IsKeyExistsInDictionary(dict, strKey) == 1)
 	{
-		pHead = (*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)];
+		pHead = dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)];
 		if (pHead == 0)
 		{
 			//Actually Error
-			(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)] = CreateADictionaryNode(strKey, strValue);
-			(*dict).nCurrentSize++;
+			dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)] = CreateADictionaryNode(strKey, strValue);
+			dict->nCurrentSize++;
 
 		}
 		else
@@ -230,11 +240,11 @@ int AddNameValueToDictionary(Dictionary *dict, char *strKey, char *strValue)
 			if (bFoundKey == 0)
 			{
 				//Actually Error
-				pHead = (*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)];
+				pHead = dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)];
 				pCurrent = CreateADictionaryNode(strKey, strValue);
 				(*pCurrent).next = pHead;
-				(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)] = pCurrent;
-				(*dict).nCurrentSize++;
+				dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)] = pCurrent;
+				dict->nCurrentSize++;
 
 			}
 		}
@@ -244,31 +254,31 @@ int AddNameValueToDictionary(Dictionary *dict, char *strKey, char *strValue)
 	}
 	else
 	{
-		pHead = (*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)];
+		pHead = dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)];
 
 		if (pHead == 0)
 		{
-			(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)] = CreateADictionaryNode(strKey, strValue);
-			(*dict).nCurrentSize++;
+			dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)] = CreateADictionaryNode(strKey, strValue);
+			dict->nCurrentSize++;
 		}
 		else
 		{
 			pCurrent = CreateADictionaryNode(strKey, strValue);
 			(*pCurrent).next = pHead;
-			(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)] = pCurrent;
-			(*dict).nCurrentSize++;
+			dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)] = pCurrent;
+			dict->nCurrentSize++;
 			
 		}
 
 	}
 
-	fTemp = (*dict).nCurrentSize;
-	fTemp = fTemp / (*dict).nSizeOfDictionary;
+	fTemp = dict->nCurrentSize;
+	fTemp = fTemp / dict->nSizeOfDictionary;
 
 
-	if (fTemp > (*dict).LoadFactor)
+	if (fTemp > dict->LoadFactor)
 	{
-		nReturnValue = RebuildDictionary(dict, (*dict).nSizeOfDictionary * 2);
+		nReturnValue = RebuildDictionary(dict, dict->nSizeOfDictionary * 2);
 	}
 
 	return nReturnValue;
@@ -298,12 +308,12 @@ int AddNodeToDictionary(Dictionary *dict, DictionaryNode *dictNode)
 
 	if (IsKeyExistsInDictionary(dict, (*dictNode).strName) == 1)
 	{
-		pHead = (*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)];
+		pHead = dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)];
 		if (pHead == 0)
 		{
 			//Actually Error
-			(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)] = dictNode;
-			(*dict).nCurrentSize++;
+			dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)] = dictNode;
+			dict->nCurrentSize++;
 		}
 		else
 		{
@@ -347,35 +357,35 @@ int AddNodeToDictionary(Dictionary *dict, DictionaryNode *dictNode)
 			{
 				//Actually error
 				(*dictNode).next = pHead;
-				(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)] = dictNode;
-				(*dict).nCurrentSize++;
+				dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)] = dictNode;
+				dict->nCurrentSize++;
 
 			}
 		}
 	}
 	else
 	{
-		pHead = (*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)];
+		pHead = dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)];
 		if (pHead == 0)
 		{
-			(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)] = dictNode;
-			(*dict).nCurrentSize++;
+			dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)] = dictNode;
+			dict->nCurrentSize++;
 		}
 		else
 		{
 			(*dictNode).next = pHead;
-			(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)] = dictNode;
-			(*dict).nCurrentSize++;
+			dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)] = dictNode;
+			dict->nCurrentSize++;
 		}
 	}
 
-	fTemp = (*dict).nCurrentSize;
-	fTemp = fTemp / (*dict).nSizeOfDictionary;
+	fTemp = dict->nCurrentSize;
+	fTemp = fTemp / dict->nSizeOfDictionary;
 
 
-	if (fTemp > (*dict).LoadFactor)
+	if (fTemp > dict->LoadFactor)
 	{
-		nReturnValue = RebuildDictionary(dict, (*dict).nSizeOfDictionary * 2);
+		nReturnValue = RebuildDictionary(dict, dict->nSizeOfDictionary * 2);
 	}
 
 	return nReturnValue;
@@ -394,9 +404,9 @@ int IsKeyExistsInDictionary(Dictionary *dict, char *strKey)
 	int i = 0;
 	DictionaryNode *pHead = 0, *pCurrent = 0;
 
-	for (i = 0; i < (*dict).nSizeOfDictionary; i++)
+	for (i = 0; i < dict->nSizeOfDictionary; i++)
 	{
-		pHead = (*dict).dictionaryArray[i];
+		pHead = dict->dictionaryArray[i];
 		if (pHead != 0)
 		{
 			pCurrent = pHead;
@@ -445,11 +455,11 @@ int RebuildDictionary(Dictionary *dict, int nNewSize)
 	DictionaryNode *pHead = 0, *pCurrent = 0;
 
 	DictionaryNode** pNewArray = (DictionaryNode**)malloc(sizeof(DictionaryNode*)*nNewSize);
-	DictionaryNode** pOldArray = (*dict).dictionaryArray;
-	nOldSize = (*dict).nSizeOfDictionary;
-	(*dict).nSizeOfDictionary = nNewSize;
-	(*dict).dictionaryArray = pNewArray;
-	(*dict).nCurrentSize = 0;
+	DictionaryNode** pOldArray = dict->dictionaryArray;
+	nOldSize = dict->nSizeOfDictionary;
+	dict->nSizeOfDictionary = nNewSize;
+	dict->dictionaryArray = pNewArray;
+	dict->nCurrentSize = 0;
 
 	for (i = 0; i < nOldSize; i++)
 	{
@@ -491,7 +501,7 @@ int DeleteKeyFromDictionary(Dictionary *dict, char *strKey)
 
 	DictionaryNode *pHead = 0, *pCurrent = 0, *pPrev = 0;
 
-	pHead = (*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)];
+	pHead = dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)];
 	if (pHead != 0)
 	{
 		pCurrent = pHead;
@@ -501,7 +511,7 @@ int DeleteKeyFromDictionary(Dictionary *dict, char *strKey)
 			{
 				if (pPrev == 0)
 				{
-					(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, strKey)] = (*pCurrent).next;
+					dict->dictionaryArray[hash(dict->nSizeOfDictionary, strKey)] = (*pCurrent).next;
 
 				}
 				else
@@ -540,7 +550,7 @@ int DeleteNodeOfDictionary(Dictionary *dict, DictionaryNode *dictNode)
 	int nReturnValue = 0;
 	DictionaryNode *pCurrent = 0, *pPrev = 0, *pHead = 0;
 
-	pHead = (*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)];
+	pHead = dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)];
 	if (pHead != 0)
 	{
 		
@@ -552,7 +562,7 @@ int DeleteNodeOfDictionary(Dictionary *dict, DictionaryNode *dictNode)
 					//Delete the node
 					if (pPrev == 0)
 					{
-						(*dict).dictionaryArray[hash((*dict).nSizeOfDictionary, (*dictNode).strName)] = pCurrent->next;
+						dict->dictionaryArray[hash(dict->nSizeOfDictionary, (*dictNode).strName)] = pCurrent->next;
 					}
 					else
 					{

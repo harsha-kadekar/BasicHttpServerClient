@@ -3,6 +3,7 @@
 
 #include"ErrorCodes.h"
 #include"HttpRequestParsing.h"
+#include"SupportingDataStructures.h"
 #include<stdio.h>
 
 int HandleClientHTTPRequest(char* szRequest, int nRequestSize, SOCKET skClientSocket);
@@ -15,6 +16,7 @@ int Handle_Trace(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
 int Handle_Post(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
 int Handle_Put(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
 int Handle_Connect(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
+
 
 //HTTP Response Success codes
 #define HTTP_RESPONSE_CODE_OK 200

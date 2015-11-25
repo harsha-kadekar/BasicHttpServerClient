@@ -3,9 +3,18 @@
 int HandleClientHTTPRequest(char* szHttpRequest, int nRequestSize, SOCKET scClientSocket)
 {
 	int nReturnValue = 0;
-
+	Dictionary *dictHttpReq = 0;
+	
 	if (nRequestSize <= 0 || szHttpRequest == 0)
 		return ERR_INVALID_PARAMETERS;
+
+	dictHttpReq = CreateDictionary(10);
+	if (dictHttpReq == 0)
+	{
+		return ERR_INVALID_MEMORY_OPERATION;
+	}
+
+	nReturnValue = GenerateHttpRequestDictionary(szHttpRequest, nRequestSize, dictHttpReq);
 
 	//Handle Method
 	nReturnValue = GetTypeOfMethod(szHttpRequest, nRequestSize);
@@ -102,6 +111,7 @@ int Handle_Get(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket)
 	char* szURI = 0;
 	int nHttpVersion = 0;
 	//TODO: Yet to handle this type of method
+
 
 	szURI = GetURIOfRequest(szHttpRequest, nRequestSize, METHOD_GET);
 	if (szURI != NULL)

@@ -26,3 +26,5 @@
 
 //Dictionary Operation Errors
 #define ERR_INVALID_PARAMETERS_DICT -22
+
+#define ERR_INVALID_MEMORY_OPERATION -23

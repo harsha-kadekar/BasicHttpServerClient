@@ -1,6 +1,7 @@
 #pragma once
 #include<stdio.h>
 #include"ErrorCodes.h"
+#include"SupportingDataStructures.h"
 #include<Windows.h>
 #include<string.h>
 
@@ -17,3 +18,4 @@
 int GetTypeOfMethod(char* szRequest, int nRequestCount);
 int GetHTTPVersionOfRequest(char *szRequest, int nCount);
 char* GetURIOfRequest(char* szRequest, int nCount, int nMethod);
+int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Dictionary* dictHttpReq);

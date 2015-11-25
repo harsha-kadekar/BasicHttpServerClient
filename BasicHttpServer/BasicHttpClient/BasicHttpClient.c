@@ -11,7 +11,7 @@ Reference:
 
 char* sServerName = "GarudNextGen";
 char* sTestMessage = "Hi, GarudNextGen; This is client1";
-char* sTestGetMsg = "GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1";
+char* sTestGetMsg = "GET /index.html HTTP/1.0\r\nHost: www.paulgriffiths.net\r\nUser-Agent: Lynx/2.8.1rel.2 libwww-FM/2.14\r\nAccept-Encoding: gzip, compress\r\nAccept-Language: en\r\n\r\n";
 SOCKET scConnectSocket = INVALID_SOCKET;
 
 /*
@@ -139,7 +139,7 @@ int DiscussWithServer()
 		return nReturnValue;
 	}
 
-	nReturnValue = send(scConnectSocket, sTestGetMsg, strnlen_s(sTestGetMsg, 55), 0);
+	nReturnValue = send(scConnectSocket, sTestGetMsg, strnlen_s(sTestGetMsg, 8192), 0);
 	if (nReturnValue == SOCKET_ERROR)
 	{
 		printf_s("BHC:ERROR:Not able to send message to server %d\n", WSAGetLastError());

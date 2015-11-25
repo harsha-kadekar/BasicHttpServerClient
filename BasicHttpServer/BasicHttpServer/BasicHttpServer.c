@@ -243,6 +243,7 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 	}
 
 	szRecieveMsg = (char*)malloc(sizeof(char)*nMaxClientRequestSize);
+	memset(szRecieveMsg, '\0', nMaxClientRequestSize);
 
 	while((nReturnValue = recv(scClientSocket, szRecieveMsg, nMaxClientRequestSize, 0)) > 0)
 	{
