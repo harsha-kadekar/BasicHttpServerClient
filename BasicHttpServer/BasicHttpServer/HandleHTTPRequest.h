@@ -8,7 +8,7 @@
 
 int HandleClientHTTPRequest(char* szRequest, int nRequestSize, SOCKET skClientSocket);
 int Handle_ExtMethods(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
-int Handle_Get(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
+int Handle_Get(Dictionary *dictHttp, SOCKET scClientSocket);
 int Handle_Head(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
 int Handle_Options(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
 int Handle_Delete(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
@@ -49,6 +49,6 @@ typedef struct
 	int VersionOfHttp;
 }HttpInitialRequestLine;
 
-
+extern char *strMappedLocalPath;
 
 #endif

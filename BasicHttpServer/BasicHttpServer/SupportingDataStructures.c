@@ -93,7 +93,7 @@ int DeleteDictionaryNodeArray(DictionaryNode **dArray, int nSizeOfArray)
 					(*pHead).strValue = 0;
 				}
 
-				pCurrent = (*pCurrent).next;
+				pCurrent = (*pHead).next;
 				free(pHead);
 				pHead = pCurrent;
 

@@ -15,9 +15,14 @@ int HandleClientHTTPRequest(char* szHttpRequest, int nRequestSize, SOCKET scClie
 	}
 
 	nReturnValue = GenerateHttpRequestDictionary(szHttpRequest, nRequestSize, dictHttpReq);
+	if (nReturnValue != 0)
+	{
+		//Error has occured while adding elements to dictHttpReq
+		return nReturnValue;
+	}
 
 	//Handle Method
-	nReturnValue = GetTypeOfMethod(szHttpRequest, nRequestSize);
+	nReturnValue = GetTypeOfMethod(GetValueFromDictionary(dictHttpReq, "METHOD"));
 	switch (nReturnValue)
 	{
 		case METHOD_OPTIONS:
@@ -30,7 +35,7 @@ int HandleClientHTTPRequest(char* szHttpRequest, int nRequestSize, SOCKET scClie
 		{
 			//Handle Get
 			printf_s("BHS:INFO:Got GET method\n");
-			nReturnValue = Handle_Get(szHttpRequest, nRequestSize, scClientSocket);
+			nReturnValue = Handle_Get(dictHttpReq, scClientSocket);
 			break;
 		}
 		case METHOD_HEAD:
@@ -93,6 +98,9 @@ int HandleClientHTTPRequest(char* szHttpRequest, int nRequestSize, SOCKET scClie
 		return nReturnValue;
 	}*/
 
+	DeleteDictionary(dictHttpReq);
+	dictHttpReq = 0;
+
 	return nReturnValue;
 }
 
@@ -105,41 +113,29 @@ int Handle_ExtMethods(char *szHttpRequest, int nRequestSize, SOCKET scClientSock
 	return nReturnValue;
 }
 
-int Handle_Get(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket)
+int Handle_Get(Dictionary* dictHttpRequest, SOCKET scClientSocket)
 {
 	int nReturnValue = 0;
 	char* szURI = 0;
 	int nHttpVersion = 0;
+	int bFoundFile = 0;
 	//TODO: Yet to handle this type of method
 
 
-	szURI = GetURIOfRequest(szHttpRequest, nRequestSize, METHOD_GET);
+	szURI = GetValueFromDictionary(dictHttpRequest, "URI");
 	if (szURI != NULL)
 	{
-		printf_s("BHS:INFO:Requested URI: %s\n", szURI);
-		nHttpVersion = GetHTTPVersionOfRequest(szHttpRequest, nRequestSize);
-		if (nHttpVersion < 0 || nHttpVersion > 1)
-		{
-			//ERROR handle it
-		}
+		//Based on the URI - search in the local path for the file. If found then send 200 else send 404 not found error
+		bFoundFile = FindFileInLocalPath(szURI, strMappedLocalPath);
+		if (bFoundFile == 0)
+			printf_s("\nBHS:ERROR:Cound not find the file in the local path:%s\n", szURI);
 		else
-		{
-			if(nHttpVersion == 0)
-				printf_s("BHS:INFO:Request is of version 1.1\n");
-			else
-				printf_s("BHS:INFO:Request is of version 1.0\n");
-		}
+			printf_s("\nBHS:INFO:Able to find the file in the local path:%s\n", szURI);
 			
 	}
 	else
 	{
 		//ERROR handle it
-	}
-
-	if (szURI != NULL)
-	{
-		free(szURI);
-		szURI = NULL;
 	}
 
 	return nReturnValue;

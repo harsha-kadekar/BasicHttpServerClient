@@ -4,6 +4,7 @@
 #include"SupportingDataStructures.h"
 #include<Windows.h>
 #include<string.h>
+#include "Shlwapi.h"
 
 #define METHOD_OPTIONS 0
 #define METHOD_GET 1
@@ -15,7 +16,7 @@
 #define METHOD_CONNECT 7
 #define METHOD_EXTEND_METHODS 8
 
-int GetTypeOfMethod(char* szRequest, int nRequestCount);
-int GetHTTPVersionOfRequest(char *szRequest, int nCount);
-char* GetURIOfRequest(char* szRequest, int nCount, int nMethod);
+int GetTypeOfMethod(char* szRecievedMethod);
+int GetHTTPVersionOfRequest(char *szRequestHTTPVersion);
 int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Dictionary* dictHttpReq);
+int FindFileInLocalPath(char *szURI, char *szLocalPath);

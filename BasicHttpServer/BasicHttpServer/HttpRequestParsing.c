@@ -14,6 +14,19 @@ int stringcopy(char* strDestination, int nNoOfCharacters, char* strSource)
 	return i;
 }
 
+int substringcopy(char* strDestination, int nStartIndex, int nNoOfCharacters, char *strSource)
+{
+	int i = 0;
+	int j = 0;
+
+	for (i = nStartIndex, j = 0; j < nNoOfCharacters; j++, i++)
+	{
+		strDestination[j] = strSource[i];
+	}
+
+	return j;
+}
+
 /*
 Name: GetTypeOfMethod
 Description: This method is responsible for finding the method of HTTP request.
@@ -21,27 +34,19 @@ Parameter: Starting point of the RecieveMsg[THis is may not be complete request]
 nCount: Length of the request
 return: Type of method - each encoded by a numeric value OPTIONS:0, GET:1, HEAD:2, POST:3, PUT:4, DELETE:5, TRACE:6, CONNECT:7, EXTENDED:8
 */
-int GetTypeOfMethod(char* szRecieveMsg, int nCount)
+int GetTypeOfMethod(char* szRecievedMethod)
 {
 	int nReturnValue = 0;
-	char* szOption = "OPTIONS ";
-	char* szGet = "GET ";
-	char* szHead = "HEAD ";
-	char* szPost = "POST ";
-	char* szPut = "PUT ";
-	char* szDelete = "DELETE ";
-	char* szTrace = "TRACE ";
-	char* szConnect = "CONNECT ";
+	char* szOption = "OPTIONS";
+	char* szGet = "GET";
+	char* szHead = "HEAD";
+	char* szPost = "POST";
+	char* szPut = "PUT";
+	char* szDelete = "DELETE";
+	char* szTrace = "TRACE";
+	char* szConnect = "CONNECT";
 
-	char szTempReq[9] = { '\0' };
-
-	if (nCount < 3)
-	{
-		printf_s("BHS::ERROR: request message is less than 3 bytes\n");
-		return ERR_REQUESTSIZELESS;
-	}
-
-	if (0 == szRecieveMsg)
+	if (0 == szRecievedMethod)
 	{
 		printf_s("BHS::ERROR: request string is empty\n");
 		return ERR_REQUESTSTRINGNULL;
@@ -60,53 +65,21 @@ int GetTypeOfMethod(char* szRecieveMsg, int nCount)
 		extension - method = token
 	*/
 
-	//TODO:: extenion - method - How to identify them?
-
-	memset(szTempReq, '\0', 9);
-
-	if (nCount >= 8)
-	{
-		stringcopy(szTempReq, 7, szRecieveMsg);
-	}
-	else if (nCount >= 7)
-	{
-		stringcopy(szTempReq, 6, szRecieveMsg);
-
-	}
-	else if (nCount >= 6)
-	{
-		stringcopy(szTempReq, 5, szRecieveMsg);
-
-	}
-	else if (nCount >= 5)
-	{
-		stringcopy(szTempReq, 4, szRecieveMsg);
-
-	}
-	else
-	{
-		if(nCount = 4)
-			stringcopy(szTempReq, 3, szRecieveMsg);
-		else
-			stringcopy(szTempReq, 2, szRecieveMsg);
-
-	}
-
-	if (strncmp(szTempReq, szConnect, 8) == 0)
+	if (strcmp(szRecievedMethod, szConnect) == 0)
 		nReturnValue = METHOD_CONNECT;
-	else if (strncmp(szTempReq, szOption, 8) == 0)
+	else if (strcmp(szRecievedMethod, szOption) == 0)
 		nReturnValue = METHOD_OPTIONS;
-	else if (strncmp(szTempReq, szDelete, 7) == 0)
+	else if (strcmp(szRecievedMethod, szDelete) == 0)
 		nReturnValue = METHOD_DELETE;
-	else if (strncmp(szTempReq, szTrace, 6) == 0)
+	else if (strcmp(szRecievedMethod, szTrace) == 0)
 		nReturnValue = METHOD_TRACE;
-	else if (strncmp(szTempReq, szPost, 5) == 0)
+	else if (strcmp(szRecievedMethod, szPost) == 0)
 		nReturnValue = METHOD_POST;
-	else if (strncmp(szTempReq, szHead, 5) == 0)
+	else if (strcmp(szRecievedMethod, szHead) == 0)
 		nReturnValue = METHOD_HEAD;
-	else if (strncmp(szTempReq, szPut, 4) == 0)
+	else if (strcmp(szRecievedMethod, szPut) == 0)
 		nReturnValue = METHOD_PUT;
-	else if (strncmp(szTempReq, szGet, 4) == 0)
+	else if (strcmp(szRecievedMethod, szGet) == 0)
 		nReturnValue = METHOD_GET;
 	else
 		nReturnValue = ERR_CANNOTIDENTIFYMETHOD;
@@ -114,83 +87,7 @@ int GetTypeOfMethod(char* szRecieveMsg, int nCount)
 	return nReturnValue;
 }
 
-/*
-Name: GetURIOfRequest
-Description: This function will get the URI sent in the HTTP request
-Parameters: szRequest - actual http request,
-			nCount - Length of the http request,
-			nMethod - Type of method http request has used.
-ReturnValue: Null terminated string - URI
-*/
-char* GetURIOfRequest(char* szRequest, int nCount, int nMethod)
-{
-	//"*" | absoluteURI | abs_path | authority
-	//GET /pub/WWW/TheProject.html HTTP/1.1
-	//GET http://www.w3.org/pub/WWW/TheProject.html HTTP/1.1
-	//OPTIONS * HTTP/1.1
 
-	char* szURI = NULL;
-	int bFoundFirstSpace = 0;
-	int bFoundSecondSpace = 0;
-	int i = 0;
-	int nSize = 0;
-	int nStartIndex = 0;
-	
-	if (nCount <= 0 || szRequest == 0)
-		return szURI;
-
-	while (i < nCount)
-	{
-		if (szRequest[i] == ' ' || szRequest[i] == '\t')
-		{
-			bFoundFirstSpace = 1;
-			break;
-		}
-		else
-		{
-			i++;
-		}
-	}
-
-	if (bFoundFirstSpace == 1)
-	{
-		nStartIndex = ++i;
-		while (i < nCount)
-		{
-			if (szRequest[i] == ' ' || szRequest[i] == '\t')
-			{
-				bFoundSecondSpace = 1;
-				break;
-			}
-			nSize++;
-			i++;
-		}
-
-		if ((bFoundSecondSpace == 1) && nSize > 0)
-		{
-			szURI = (char*)malloc(sizeof(char)*(nSize+1));
-			if (szURI == 0)
-			{
-				return szURI;
-			}
-			else
-			{
-				memset(szURI, '\0', nSize + 1);
-				
-				i = 0;
-				while (i < nSize)
-				{
-szURI[i] = szRequest[i + nStartIndex];
-i++;
-				}
-
-			}
-
-		}
-	}
-
-	return szURI;
-}
 
 /*
 Name: GetHTTPVersionOfRequest
@@ -199,51 +96,36 @@ Parameters: szRequest - Actual http request
 			nCount - Length of the http request
 ReturnValue: 0 for HTTP 1.1, 1 for HTTP 1.0 else -ve error codes in case of error
 */
-int GetHTTPVersionOfRequest(char *szRequest, int nCount)
+int GetHTTPVersionOfRequest(char *szHttpRequestVersion)
 {
 	int nReturnValue = ERR_NOT_FOUND_HTTP_VER;
-	int nSpaceCount = 0;
-	int i = 0;
 	char *szHttp1_1 = "HTTP/1.1";
 	char *szHttp1_0 = "HTTP/1.0";
-	int bFoundStart = 0;
-
 
 	//GET /pub/WWW/TheProject.html HTTP/1.1
 	//GET /pub/WWW/TheProject.html HTTP/1.0
 
-	if (szRequest == 0 || nCount <= 0)
+	if (szHttpRequestVersion == 0 )
 		return ERR_INVALID_REQUEST;
 
-	while (i < nCount)
-	{
-		if (szRequest[i] == ' ' || szRequest[i] == '\t')
-		{
-			nSpaceCount++;
-			if (nSpaceCount == 2)
-			{
-				bFoundStart = 1;
-				i++;
-				break;
-			}
-		}
-		i++;
-	}
-
-	if (bFoundStart == 1)
-	{
-		if (strncmp(&szRequest[i], szHttp1_1, 7) == 0)
-			nReturnValue = 0;
-		else if (strncmp(&szRequest[i], szHttp1_0, 7) == 0)
-			nReturnValue = 1;
-		else
-			nReturnValue = ERR_NOT_FOUND_HTTP_VER;
-
-	}
+	if (strcmp(szHttpRequestVersion, szHttp1_1) == 0)
+		nReturnValue = 0;
+	else if (strcmp(szHttpRequestVersion, szHttp1_0) == 0)
+		nReturnValue = 1;
+	else
+		nReturnValue = ERR_NOT_FOUND_HTTP_VER;
 
 	return nReturnValue;
 }
 
+/*
+Name: GenerateHttpRequestDictionary
+Description: This function given a string of complete HTTP Request converts them to name value pairs and stores in the dictionary.
+Parameters: szHttpRequest: This is the complete HTTP request string.
+			nRequestSize: Size fo the HTTP request string
+			dictHttpReq: Dictionary where the name value pair will be stored.
+ReturnVaue: 0 for success else error.
+*/
 int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Dictionary* dictHttpReq)
 {
 	int nReturnValue = 0;
@@ -464,7 +346,11 @@ int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Diction
 							stringcopy(szValue, l+1, chTempBuffer2);
 							//strcpy_s(szValue, l + 1, chTempBuffer2);
 
-							AddNameValueToDictionary(dictHttpReq, szName, szValue);
+							nReturnValue = AddNameValueToDictionary(dictHttpReq, szName, szValue);
+							if (nReturnValue != 0)
+							{
+								//Error handle it
+							}
 							nStage++;
 						}
 						memset(chTempBuffer2, '\0', (i - j) + 1);
@@ -515,7 +401,11 @@ int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Diction
 								memset(szValue, '\0', l + 1);
 								stringcopy(szValue, l + 1, chTempBuffer2);
 								//strcpy_s(szValue, l + 1, chTempBuffer2);
-								AddNameValueToDictionary(dictHttpReq, szName, szValue);
+								nReturnValue = AddNameValueToDictionary(dictHttpReq, szName, szValue);
+								if (nReturnValue != 0)
+								{
+									//Error handle it
+								}
 
 							}
 							memset(chTempBuffer2, '\0', (i - j) + 1);
@@ -536,6 +426,67 @@ int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Diction
 			j = i + 1;
 		}
 	}
+
+	return nReturnValue;
+}
+
+int FindFileInLocalPath(char *szURI, char *szLocalPath)
+{
+	int nReturnValue = 0;
+	int i = 0;
+	int j = 0;
+	int nLengthOfURI = 0;
+	int nLengthOfLocalPath = 0;
+	char szFullPath[260] = { '\0' };
+
+	if (szURI == 0)
+	{
+		return ERR_INVALID_URI;
+	}
+	
+	nLengthOfLocalPath = strlen(szLocalPath);
+
+	
+
+	if (szLocalPath[0] == '\"' && szLocalPath[nLengthOfLocalPath - 1] == '\"')
+	{
+		substringcopy(szFullPath, 1, nLengthOfLocalPath - 1, szLocalPath);
+		szFullPath[nLengthOfLocalPath - 2] = '\0';
+		nLengthOfLocalPath -= 2;
+		
+	}
+	else
+	{
+		stringcopy(szFullPath, nLengthOfLocalPath, szLocalPath);
+	}
+	
+	
+	if (szLocalPath[nLengthOfLocalPath - 1] != '\\')
+	{
+		szFullPath[nLengthOfLocalPath] = '\\';
+	}
+
+	nLengthOfURI = strlen(szURI);
+	j = nLengthOfLocalPath + 1;
+	while (i < nLengthOfURI)
+	{
+		if (szURI[i] == '/')
+		{
+			if (j != nLengthOfLocalPath + 1)
+			{
+				szFullPath[j++] = '\\';
+			}
+		}
+		else
+		{
+			szFullPath[j++] = szURI[i];
+		}
+		i++;
+	}
+
+	szFullPath[j] = '\0';
+	nReturnValue = PathFileExistsA(szFullPath);
+
 
 	return nReturnValue;
 }
