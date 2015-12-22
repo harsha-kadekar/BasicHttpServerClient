@@ -150,16 +150,20 @@
     <ClCompile Include="BasicHttpServer.c" />
     <ClCompile Include="ConfigFileParser.c" />
     <ClCompile Include="HandleHTTPRequest.c" />
+    <ClCompile Include="HandleHTTPResponse.c" />
     <ClCompile Include="HttpRequestParsing.c" />
     <ClCompile Include="SupportingDataStructures.c" />
+    <ClCompile Include="SupportingFunctions.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicHttpServer.h" />
     <ClInclude Include="ConfigFileParser.h" />
     <ClInclude Include="ErrorCodes.h" />
     <ClInclude Include="HandleHTTPRequest.h" />
+    <ClInclude Include="HandleHTTPResponse.h" />
     <ClInclude Include="HttpRequestParsing.h" />
     <ClInclude Include="SupportingDataStructures.h" />
+    <ClInclude Include="SupportingFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicHttpServerConfig.config" />

@@ -30,6 +30,12 @@
     <ClCompile Include="SupportingDataStructures.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HandleHTTPResponse.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SupportingFunctions.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicHttpServer.h">
@@ -48,6 +54,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SupportingDataStructures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HandleHTTPResponse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SupportingFunctions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

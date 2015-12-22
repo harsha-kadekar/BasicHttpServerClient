@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include"ErrorCodes.h"
 #include"SupportingDataStructures.h"
+#include"SupportingFunctions.h"
 #include<Windows.h>
 #include<string.h>
 #include "Shlwapi.h"
@@ -19,4 +20,6 @@
 int GetTypeOfMethod(char* szRecievedMethod);
 int GetHTTPVersionOfRequest(char *szRequestHTTPVersion);
 int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Dictionary* dictHttpReq);
+char* GetFilePathFromURI(char *szURI, char *szLocalPath);
 int FindFileInLocalPath(char *szURI, char *szLocalPath);
+

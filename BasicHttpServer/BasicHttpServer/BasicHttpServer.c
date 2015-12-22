@@ -87,6 +87,7 @@ int InitializeSocket()
 
 	struct addrinfo structServerAddrInfo, *structServerAddrResult = NULL;
 	WSADATA wsData;
+	char strPort[6] = { '\0' };
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsData) != 0)
 	{
@@ -100,6 +101,10 @@ int InitializeSocket()
 	structServerAddrInfo.ai_socktype = SOCK_STREAM;
 	structServerAddrInfo.ai_protocol = IPPROTO_TCP;
 	structServerAddrInfo.ai_flags = AI_PASSIVE;
+
+	memset(strPort, '\0', 6);
+
+	sprintf_s(strPort, 6, "%d", nConfiguredPortNumbered);
 
 	nReturnValue = getaddrinfo(NULL, "8080", &structServerAddrInfo, &structServerAddrResult);
 	if (nReturnValue != 0)
@@ -252,6 +257,8 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 		printf_s("BHS:INFO:Recieved %d bytes\n", nReturnValue);
 		printf_s("BHS:INFO: %s\n", szRecieveMsg);
 
+
+
 		nRequestSize = nReturnValue + nPrevSize;
 		szFullRequestMsg = (char*)malloc(sizeof(char)*nRequestSize);
 		if (szFullRequestMsg == 0)
@@ -277,6 +284,10 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 				i++;
 			}
 
+			//\r\n\r\n
+			if (strlen(szRecieveMsg)>4)
+				if (szRecieveMsg[strlen(szRecieveMsg) - 1] == '\n' && szRecieveMsg[strlen(szRecieveMsg) - 2] == '\r' && szRecieveMsg[strlen(szRecieveMsg) - 3] == '\n' && szRecieveMsg[strlen(szRecieveMsg) - 4] == '\r')
+					break;
 		}
 
 		
@@ -284,7 +295,7 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam)
 		
 	}
 
-	if (nReturnValue == 0)
+	if (nReturnValue >= 0)
 	{
 		printf_s("BHS:INFO:Client has closed socket\n");
 		printf_s("BHS:INFO:Going to handle client request\n");

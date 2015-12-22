@@ -150,18 +150,18 @@ int DiscussWithServer()
 		return nReturnValue;
 	}
 
-	closesocket(scConnectSocket);
-	WSACleanup();
+	//closesocket(scConnectSocket);
+	//WSACleanup();
 	
 
-	/*do
+	do
 	{
 		nReturnValue = recv(scConnectSocket, szRecieveMessage, 512, 0);
 		if (nReturnValue > 0)
 		{
 			printf_s("BHS:INFO:Recieved %d bytes from server\n", nReturnValue);
 			printf_s("BHS:INFO:Recieved message: %s", szRecieveMessage);
-			nReturnValue = 0;
+			//nReturnValue = 0;
 		}
 		else if (nReturnValue == 0)
 		{
@@ -175,7 +175,7 @@ int DiscussWithServer()
 
 		memset(szRecieveMessage, '\0', 512);
 
-	} while (nReturnValue > 0);*/
+	} while (nReturnValue > 0);
 
 
 

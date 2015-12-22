@@ -8,6 +8,7 @@ Developer - Harsha
 char strConfigFilePath[260] = "BasicHttpServerConfig.config";
 int nMaxClientRequestSize = 8192;
 int nThreadPoolSize = 512;
+int nConfiguredPortNumbered = 8080;
 int nLogLevel = 1;
 char *strMappedLocalPath = 0;
 
@@ -230,6 +231,23 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 						nLogLevel = 4;
 					else
 						nLogLevel = 5;	//ERROR
+
+				}
+				else if (strcmp(szKey, "PortToWatch") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+
+					nTempNum = 0;
+					nReturnValue = ConvertStringToNumber(szKey, &nTempNum);
+					if (nReturnValue != 0)
+					{
+						return ERR_INVALID_VALUE_IN_CONFIG;
+					}
+					nConfiguredPortNumbered = nTempNum;
 
 				}
 				else

@@ -41,7 +41,7 @@ int HandleClientHTTPRequest(char* szHttpRequest, int nRequestSize, SOCKET scClie
 		case METHOD_HEAD:
 		{
 			//Handle Head
-			nReturnValue = Handle_Head(szHttpRequest, nRequestSize, scClientSocket);
+			nReturnValue = Handle_Head(dictHttpReq, scClientSocket);
 			break;
 		}
 		case METHOD_POST:
@@ -97,6 +97,8 @@ int HandleClientHTTPRequest(char* szHttpRequest, int nRequestSize, SOCKET scClie
 		WSACleanup();
 		return nReturnValue;
 	}*/
+	//closesocket(scClientSocket);
+	//WSACleanup();
 
 	DeleteDictionary(dictHttpReq);
 	dictHttpReq = 0;
@@ -119,18 +121,77 @@ int Handle_Get(Dictionary* dictHttpRequest, SOCKET scClientSocket)
 	char* szURI = 0;
 	int nHttpVersion = 0;
 	int bFoundFile = 0;
+	char* szQueryString = 0;
+	char* szPathOfFile = 0;
+	char szIndex = "index.html";
+	char szPathAfterAdding[260] = { '\0' };
 	//TODO: Yet to handle this type of method
 
 
 	szURI = GetValueFromDictionary(dictHttpRequest, "URI");
 	if (szURI != NULL)
 	{
+		//Check if the uri has query string. If so then it needs to be handled by cgi.
+
 		//Based on the URI - search in the local path for the file. If found then send 200 else send 404 not found error
-		bFoundFile = FindFileInLocalPath(szURI, strMappedLocalPath);
-		if (bFoundFile == 0)
-			printf_s("\nBHS:ERROR:Cound not find the file in the local path:%s\n", szURI);
+		
+		szQueryString = szURI;
+		while ((*szQueryString) != '?' && (*szQueryString) != '\0')
+		{
+			szQueryString++;
+		}
+		if ((*szQueryString) == '?')
+		{
+			//This is a query string so handle it in a different way.
+			szQueryString++;
+		}
 		else
-			printf_s("\nBHS:INFO:Able to find the file in the local path:%s\n", szURI);
+		{
+			bFoundFile = FindFileInLocalPath(szURI, strMappedLocalPath);
+			if (bFoundFile == 0)
+			{
+				printf_s("\nBHS:ERROR:Cound not find the file in the local path:%s\n", szURI);
+				nReturnValue = HandleFileNotFound(dictHttpRequest, scClientSocket);
+			}
+			else
+			{
+				printf_s("\nBHS:INFO:Able to find the file in the local path:%s\n", szURI);
+				szPathOfFile = GetFilePathFromURI(szURI, strMappedLocalPath);
+				if (szPathOfFile[strnlen_s(szPathOfFile, 260) - 1] == '/')
+				{
+					//Add index.html file
+					stringcopy(szPathAfterAdding, strlen(szPathOfFile), szPathOfFile);
+					strcat_s(szPathAfterAdding, 260, szIndex);
+					free(szPathOfFile);
+					if (FileExists(szPathAfterAdding) == 1)
+					{
+						szPathOfFile = (char*)malloc(sizeof(char)*strlen(szPathAfterAdding) + 1);
+						memset(szPathOfFile, '\0', strlen(szPathAfterAdding)+1);
+						stringcopy(szPathOfFile, strlen(szPathAfterAdding), szPathAfterAdding);
+
+						nReturnValue = HandleGetFileResponse(dictHttpRequest, scClientSocket, szPathOfFile);
+
+						free(szPathOfFile);
+						szPathOfFile = 0;
+					}
+					else
+					{
+						nReturnValue = HandleFileNotFound(dictHttpRequest, scClientSocket);
+					}
+
+				}
+				else
+				{
+					nReturnValue = HandleGetFileResponse(dictHttpRequest, scClientSocket, szPathOfFile);
+
+					free(szPathOfFile);
+					szPathOfFile = 0;
+				}
+
+			}
+		}
+
+		
 			
 	}
 	else
@@ -141,10 +202,11 @@ int Handle_Get(Dictionary* dictHttpRequest, SOCKET scClientSocket)
 	return nReturnValue;
 }
 
-int Handle_Head(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket)
+int Handle_Head(Dictionary *dictHttpReq, SOCKET scClientSocket)
 {
 	int nReturnValue = 0;
 	//TODO: Yet to handle this type of method
+	nReturnValue = HandleHeadResponse(dictHttpReq, scClientSocket);
 
 	return nReturnValue;
 }

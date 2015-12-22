@@ -1,31 +1,7 @@
 #include"HttpRequestParsing.h"
 
 
-int stringcopy(char* strDestination, int nNoOfCharacters, char* strSource)
-{
-	int i = 0;
 
-	while (i < nNoOfCharacters)
-	{
-		strDestination[i] = strSource[i];
-		i++;
-	}
-
-	return i;
-}
-
-int substringcopy(char* strDestination, int nStartIndex, int nNoOfCharacters, char *strSource)
-{
-	int i = 0;
-	int j = 0;
-
-	for (i = nStartIndex, j = 0; j < nNoOfCharacters; j++, i++)
-	{
-		strDestination[j] = strSource[i];
-	}
-
-	return j;
-}
 
 /*
 Name: GetTypeOfMethod
@@ -430,37 +406,41 @@ int GenerateHttpRequestDictionary(char *szHttpRequest, int nRequestSize, Diction
 	return nReturnValue;
 }
 
-int FindFileInLocalPath(char *szURI, char *szLocalPath)
+char* GetFilePathFromURI(char *szURI, char *szLocalPath)
 {
-	int nReturnValue = 0;
+
 	int i = 0;
 	int j = 0;
 	int nLengthOfURI = 0;
 	int nLengthOfLocalPath = 0;
-	char szFullPath[260] = { '\0' };
+	char* szFullPath = 0;
 
 	if (szURI == 0)
 	{
-		return ERR_INVALID_URI;
+		return szFullPath;
 	}
-	
+
 	nLengthOfLocalPath = strlen(szLocalPath);
 
-	
+	szFullPath = (char*)malloc(sizeof(char) * 260);
+	if (szFullPath == 0)
+		return szFullPath;
+
+	memset(szFullPath, '\0', 260);
 
 	if (szLocalPath[0] == '\"' && szLocalPath[nLengthOfLocalPath - 1] == '\"')
 	{
 		substringcopy(szFullPath, 1, nLengthOfLocalPath - 1, szLocalPath);
 		szFullPath[nLengthOfLocalPath - 2] = '\0';
 		nLengthOfLocalPath -= 2;
-		
+
 	}
 	else
 	{
 		stringcopy(szFullPath, nLengthOfLocalPath, szLocalPath);
 	}
-	
-	
+
+
 	if (szLocalPath[nLengthOfLocalPath - 1] != '\\')
 	{
 		szFullPath[nLengthOfLocalPath] = '\\';
@@ -485,8 +465,38 @@ int FindFileInLocalPath(char *szURI, char *szLocalPath)
 	}
 
 	szFullPath[j] = '\0';
-	nReturnValue = PathFileExistsA(szFullPath);
 
+	return szFullPath;
+}
+
+int FindFileInLocalPath(char *szURI, char *szLocalPath)
+{
+	int nReturnValue = 0;
+	int i = 0;
+	int j = 0;
+	int nLengthOfURI = 0;
+	int nLengthOfLocalPath = 0;
+	char* szFullPath = 0;
+
+	if (szURI == 0)
+	{
+		return ERR_INVALID_URI;
+	}
+	
+	
+
+	szFullPath = GetFilePathFromURI(szURI, szLocalPath);
+	
+	if (szFullPath != 0)
+	{
+		nReturnValue = FileExists(szFullPath);
+		free(szFullPath);
+		szFullPath = 0;
+	}
+	else
+	{
+		//Error in path construction;
+	}
 
 	return nReturnValue;
 }

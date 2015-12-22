@@ -15,5 +15,6 @@ DWORD WINAPI HandleClientRequestThread(LPVOID lpParam);
 extern int nMaxClientRequestSize;
 extern int nThreadPoolSize;
 extern char *strConfigFilePath;
+extern int nConfiguredPortNumbered;
 
 #endif
