@@ -88,5 +88,7 @@ extern char *strMappedLocalPath;
 
 int HandleGetFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket, char *strFileToSend);
 int HandleFileNotFound(Dictionary *dictHttpRequest, SOCKET scClientSocket);
+int HandleHeadFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket);
+int HandleHeadFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket);
 
 #endif
