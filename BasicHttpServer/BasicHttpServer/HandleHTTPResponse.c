@@ -35,6 +35,18 @@ int HandleFileNotFound(Dictionary *dictHttpRequest, SOCKET scClientSocket)
 	return nReturnValue;
 }
 
+int HandleDeleteFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket, char* szFilePath)
+{
+	int nReturnValue = 0;
+
+	nReturnValue = HandleHeadFileResponse(dictHttpRequest, scClientSocket);
+	char* szFileContent = "<html><head><title>Resource Deleted</title></head><body><p>Requested URI has been deleted</p></body></html>";
+
+	nReturnValue = send(scClientSocket, szFileContent, strlen(szFileContent), 0);
+
+	return nReturnValue;
+}
+
 int HandleMethodNotImplemented(Dictionary *dictHttpRequest, SOCKET scClientSocket)
 {
 	int nReturnValue = 0;

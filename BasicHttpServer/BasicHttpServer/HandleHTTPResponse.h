@@ -90,5 +90,6 @@ int HandleGetFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket, ch
 int HandleFileNotFound(Dictionary *dictHttpRequest, SOCKET scClientSocket);
 int HandleHeadFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket);
 int HandleHeadFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket);
+int HandleDeleteFileResponse(Dictionary *dictHttpRequest, SOCKET scClientSocket, char* szFilePath);
 
 #endif

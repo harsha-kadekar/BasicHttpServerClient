@@ -11,7 +11,7 @@ int Handle_ExtMethods(char *szHttpRequest, int nRequestSize, SOCKET scClientSock
 int Handle_Get(Dictionary *dictHttpRequest, SOCKET scClientSocket);
 int Handle_Head(Dictionary *dictHttpRequest, SOCKET scClientSocket);
 int Handle_Options(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
-int Handle_Delete(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
+int Handle_Delete(Dictionary *dictHttpRequest, SOCKET scClientSocket);
 int Handle_Trace(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
 int Handle_Post(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
 int Handle_Put(char *szHttpRequest, int nRequestSize, SOCKET scClientSocket);
