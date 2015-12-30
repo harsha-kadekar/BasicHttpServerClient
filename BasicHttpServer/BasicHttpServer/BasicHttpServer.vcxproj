@@ -152,6 +152,7 @@
     <ClCompile Include="HandleHTTPRequest.c" />
     <ClCompile Include="HandleHTTPResponse.c" />
     <ClCompile Include="HttpRequestParsing.c" />
+    <ClCompile Include="Logger.c" />
     <ClCompile Include="SupportingDataStructures.c" />
     <ClCompile Include="SupportingFunctions.c" />
   </ItemGroup>
@@ -162,6 +163,7 @@
     <ClInclude Include="HandleHTTPRequest.h" />
     <ClInclude Include="HandleHTTPResponse.h" />
     <ClInclude Include="HttpRequestParsing.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="SupportingDataStructures.h" />
     <ClInclude Include="SupportingFunctions.h" />
   </ItemGroup>

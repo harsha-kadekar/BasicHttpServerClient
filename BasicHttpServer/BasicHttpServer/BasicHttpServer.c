@@ -40,12 +40,13 @@ int main(int argc, char** argv)
 		printf_s("\nBHS:ERROR:Initialization of configuraition file reading failed with error:%d\n", nReturnValue);
 		return nReturnValue;
 	}
-	nReturnValue = ReadConigurationFile();
+	nReturnValue = ReadConfigurationFile();
 	if (nReturnValue != 0)
 	{
 		printf_s("\nBHS:ERROR:Error in reading configuraiton file = %d\n", nReturnValue);
 		return nReturnValue;
 	}
+	nReturnValue = InitializeLogger();
 	printf("\nBHS:INFO:Initializing Socket......\n");
 	nReturnValue = InitializeSocket();
 	if (nReturnValue != 0)
@@ -70,6 +71,8 @@ int main(int argc, char** argv)
 		printf_s("\nBHS:ERROR:error during uninitializing the parameters: %d\n", nReturnValue);
 	}
 	printf("\nBHS:INFO:Exiting BASIC HTTP SERVER.......\n");
+
+	nReturnValue = UninitializeLogger();
 
 	return nReturnValue;
 }

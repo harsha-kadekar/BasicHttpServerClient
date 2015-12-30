@@ -4,6 +4,7 @@
 #include<stdio.h>
 #include<Windows.h>
 #include"ErrorCodes.h"
+#include"SupportingFunctions.h"
 
 typedef struct
 {
@@ -22,10 +23,9 @@ typedef struct structWebSites
 WebSites* pHeadOfWebSiteList;
 
 int ConfigFileParserInitialization();
-int ReadConigurationFile();
+int ReadConfigurationFile();
 int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex);
 int HandleHostedWebSites(char* szFileBuffer, int nSize, int *nCurrentIndex);
-int ConvertStringToNumber(char* strNum, int* pResNum);
 int GetWebSiteDetails(char* szFileBuffer, int nSize, int *nCurrentIndex, WebSiteDetails *webSite);
 int UninitializeConfigurationParameters();
 

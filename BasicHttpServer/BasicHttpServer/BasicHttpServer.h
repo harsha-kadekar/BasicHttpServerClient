@@ -7,6 +7,7 @@
 #include<ws2tcpip.h>
 #include"ErrorCodes.h"
 #include"HandleHTTPRequest.h"
+#include"Logger.h"
 
 int InitializeSocket();
 int ListenForClientConnection();

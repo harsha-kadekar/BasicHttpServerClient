@@ -11,6 +11,10 @@ int nThreadPoolSize = 512;
 int nConfiguredPortNumbered = 8080;
 int nLogLevel = 1;
 char *strMappedLocalPath = 0;
+char *strLogFilePath = 0;
+int bOnlyFileLogging = 1;
+int NoOfDaysBackUpLogFile = 30;
+
 
 /*
 Name: ConfigFileParserInitialization
@@ -25,6 +29,12 @@ int ConfigFileParserInitialization()
 	pHeadOfWebSiteList = 0;
 	nMaxClientRequestSize = 8192;
 	nThreadPoolSize = 512;
+	nConfiguredPortNumbered = 8080;
+	nLogLevel = 1;
+	strMappedLocalPath = 0;
+	strLogFilePath = 0;
+	bOnlyFileLogging = 1;
+	NoOfDaysBackUpLogFile = 30;
 
 	return nReturnValue;
 
@@ -36,7 +46,7 @@ Description: This function is responsible for reading the configuraiton file and
 Parameter: - 
 ReturnValue: 0 for success else error codes.
 */
-int ReadConigurationFile()
+int ReadConfigurationFile()
 {
 	int nReturnValue = 0;
 	FILE *fp = NULL;
@@ -98,13 +108,23 @@ int ReadConigurationFile()
 						return nReturnValue;
 				}
 
-				if (strcmp(szKey, "ServerConfiguration") == 0)
+				else if (strcmp(szKey, "ServerConfiguration") == 0)
 				{
 					nReturnValue = HandleServerConfiguration(szFileBuffer, nNumberOfCharRead, &i);
 					if (nReturnValue != 0)
 					{
 						return nReturnValue;
 					
+					}
+				}
+
+				else if (strcmp(szKey, "LoggingConfig") == 0)
+				{
+					nReturnValue = HandleLoggingConfiguration(szFileBuffer, nNumberOfCharRead, &i);
+					if (nReturnValue != 0)
+					{
+						return nReturnValue;
+
 					}
 				}
 
@@ -123,6 +143,138 @@ int ReadConigurationFile()
 
 	}
 	
+
+	return nReturnValue;
+}
+
+int HandleLoggingConfiguration(char *szFileBuffer, int nSize, int *nCurrentIndex)
+{
+	int nReturnValue = 0;
+	int i = 0;
+	int j = 0;
+	int nTempNum = 0;
+	char szKey[1024] = { '\0' };
+
+	/*
+	<LogFilePath>"C:\D_Drive\Coding\BasicHttpServerClient\BasicHttpServer\Log"< / LogFilePath>
+	<LogLevel>DEBUG< / LogLevel>
+	<OnlyFile>FALSE< / OnlyFile>
+	<BackupDays>30< / BackupDays>
+	*/
+
+	for (i = *(nCurrentIndex); i < nSize; i++)
+	{
+		if (szFileBuffer[i] != '<')
+			continue;
+		else
+		{
+			if (szFileBuffer[i + 1] != '/')
+			{
+				i++;
+				memset(szKey, '\0', 1024);
+				j = 0;
+				while (szFileBuffer[i] != '>')
+				{
+					szKey[j++] = szFileBuffer[i++];
+				}
+
+				if (strcmp(szKey, "LogFilePath") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+
+					strLogFilePath = (char*)malloc(sizeof(char)*strnlen_s(szKey, 1024) + 1);
+					memset(strLogFilePath, '\0', strnlen_s(szKey, 1024) + 1);
+
+					stringcopy(strLogFilePath, strnlen_s(szKey, 1024), szKey);
+
+				}
+				else if (strcmp(szKey, "LogLevel") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+
+					if (strcmp(szKey, "ALL") == 0)
+						nLogLevel = 1;
+					else if (strcmp(szKey, "DEBUG") == 0)
+						nLogLevel = 2;
+					else if (strcmp(szKey, "INFO") == 0)
+						nLogLevel = 3;
+					else if (strcmp(szKey, "WARN") == 0)
+						nLogLevel = 4;
+					else
+						nLogLevel = 5;	//ERROR
+
+				}
+				else if (strcmp(szKey, "OnlyFile") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+					nTempNum = 0;
+					nReturnValue = ConvertStringToNumber(szKey, &nTempNum);
+					if (nReturnValue != 0)
+					{
+						return ERR_INVALID_VALUE_IN_CONFIG;
+					}
+					bOnlyFileLogging = nTempNum;
+
+				}
+				else if (strcmp(szKey, "BackupDays") == 0)
+				{
+					i++;
+					j = 0;
+					memset(szKey, '\0', 1024);
+					while (szFileBuffer[i] != '<')
+						szKey[j++] = szFileBuffer[i++];
+
+					nTempNum = 0;
+					nReturnValue = ConvertStringToNumber(szKey, &nTempNum);
+					if (nReturnValue != 0)
+					{
+						return ERR_INVALID_VALUE_IN_CONFIG;
+					}
+					NoOfDaysBackUpLogFile = nTempNum;
+
+				}
+				else
+				{
+					//Not recognizable key!!!! error
+					nReturnValue = ERR_INVALID_KEY_IN_CONFIG;
+					return nReturnValue;
+				}
+
+
+
+			}
+			else
+			{
+				i++;
+				memset(szKey, '\0', 1024);
+				j = 0;
+				while (szFileBuffer[i] != '>')
+				{
+					szKey[j++] = szFileBuffer[i++];
+				}
+
+				if (strcmp(szKey, "/LoggingConfig") == 0)
+				{
+					break;
+				}
+
+			}
+
+		}
+
+	}
 
 	return nReturnValue;
 }
@@ -213,7 +365,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 					}
 
 				}
-				else if (strcmp(szKey, "LogLevel") == 0)
+				/*else if (strcmp(szKey, "LogLevel") == 0)
 				{
 					i++;
 					j = 0;
@@ -232,7 +384,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 					else
 						nLogLevel = 5;	//ERROR
 
-				}
+				}*/
 				else if (strcmp(szKey, "PortToWatch") == 0)
 				{
 					i++;
@@ -280,38 +432,7 @@ int HandleServerConfiguration(char* szFileBuffer, int nSize, int *nCurrentIndex)
 	return nReturnValue;
 }
 
-/*
-Name: ConvertStringToNumber
-Description: As the name suggests this function is responsible for converting the read string into number.
-Parameter: strNum = Number in the format of strings
-		   pResNum = after conversion, number will be placed here.
-ReturnValue: 0 for success, else -ve error code.
-*/
-int ConvertStringToNumber(char* strNum, int* pResNum)
-{
-	int nReturnValue = 0;
-	int i = 0;
-	int nNumber = 0;
-	int nTemp = 0;
 
-	while (strNum[i] != '\0' && i < 1024)
-	{
-		nTemp = strNum[i++] - '0';
-		if (nTemp > 9)
-		{
-			//INVALID NUMBER CHARACTER
-			nReturnValue = ERR_INVALID_VALUE_IN_CONFIG;
-			return nReturnValue;
-		}
-
-		nNumber = nNumber * 10 + nTemp;
-
-	}
-
-	(*pResNum) = nNumber;
-
-	return nReturnValue;
-}
 
 /*
 Name: HandleHostedWebSites
