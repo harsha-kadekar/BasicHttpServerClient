@@ -7,6 +7,7 @@
 #include<stdio.h>
 #include "Shlwapi.h"
 #include "SupportingFunctions.h"
+#include "Logger.h"
 
 //HTTP Response codes
 

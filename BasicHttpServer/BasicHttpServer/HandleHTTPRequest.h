@@ -4,6 +4,7 @@
 #include"ErrorCodes.h"
 #include"HttpRequestParsing.h"
 #include"SupportingDataStructures.h"
+#include"Logger.h"
 #include<stdio.h>
 
 int HandleClientHTTPRequest(char* szRequest, int nRequestSize, SOCKET skClientSocket);

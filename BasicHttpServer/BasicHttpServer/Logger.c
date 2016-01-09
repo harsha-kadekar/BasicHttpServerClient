@@ -114,6 +114,10 @@ int LogMessage(int msgLogLevel, char *szMessage)
 
 		EnterCriticalSection(&logCriticalSect);
 		nReturnValue = WriteToFile(szCompleteMsg);
+		if (bOnlyFileLogging == 0)
+		{
+			printf_s("%s", szCompleteMsg);
+		}
 		LeaveCriticalSection(&logCriticalSect);
 	}
 

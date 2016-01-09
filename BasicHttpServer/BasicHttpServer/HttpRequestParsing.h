@@ -6,6 +6,7 @@
 #include<Windows.h>
 #include<string.h>
 #include "Shlwapi.h"
+#include "Logger.h"
 
 #define METHOD_OPTIONS 0
 #define METHOD_GET 1
